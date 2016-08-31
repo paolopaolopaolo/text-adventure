@@ -31,20 +31,9 @@ class Agent(models.Model):
     hp = models.IntegerField()
     mp = models.IntegerField()
 
-    def _nativize_move(self, move):
-        compare_fields = [
-            'name',
-            'description',
-            'type',
-            'effect_magnitude',
-            'special_move'
-        ]
-        move = model_to_dict(move, fields=compare_fields)
-        return move
-
     def knows_move(self, move):
-        move = self._nativize_move(move)
-        current_moves = [self._nativize_move(current_move) for current_move in self.moves.all()]
+        move = move.move_dict
+        current_moves = [current_move.move_dict for current_move in self.moves.all()]
         return move in current_moves
 
     def learn_move(self, move):
@@ -66,6 +55,18 @@ class Move(models.Model):
     effect_magnitude = models.IntegerField()
     user = models.ForeignKey("Agent", related_name='moves', null=True, blank=True)
 
+    compare_fields = [
+        'name',
+        'description',
+        'type',
+        'effect_magnitude',
+        'special_move'
+    ]
+
+    @property
+    def move_dict(self):
+        move = model_to_dict(self, fields=self.compare_fields)
+        return move
 
 class Inventory(models.Model):
     type = models.CharField(max_length=3, choices=INVENTORY_TYPE)
