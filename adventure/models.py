@@ -1,4 +1,6 @@
 from django.db import models
+from django.forms.models import model_to_dict
+
 
 MOVE_EFFECT_TYPES = (
     ('HP', 'HP Effect'),
@@ -29,11 +31,31 @@ class Agent(models.Model):
     hp = models.IntegerField()
     mp = models.IntegerField()
 
+    def _nativize_move(self, move):
+        compare_fields = [
+            'name',
+            'description',
+            'type',
+            'effect_magnitude',
+            'special_move'
+        ]
+        move = model_to_dict(move, fields=compare_fields)
+        return move
+
+    def knows_move(self, move):
+        move = self._nativize_move(move)
+        current_moves = [self._nativize_move(current_move) for current_move in self.moves.all()]
+        return move in current_moves
+
     def learn_move(self, move):
-        new_move = Move.objects.get(id=move.id)
-        new_move.id = None
-        new_move.user = self
-        new_move.save()
+        if not self.knows_move(move):
+            new_move = Move.objects.get(id=move.id)
+            new_move.id = None
+            new_move.user = self
+            new_move.save()
+
+    def use_move(self, entity, move):
+        assert isinstance(entity, Agent)
 
 
 class Move(models.Model):
