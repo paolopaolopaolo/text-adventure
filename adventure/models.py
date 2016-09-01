@@ -122,7 +122,7 @@ class Scene(NamedModel):
 
     @property
     def complete_description(self):
-        string_description = "You find yourself at {}. {}.\n".format(self.name, self.description)
+        string_description = "You find yourself at {}. {}\n".format(self.name, self.description)
         if self.to_scenes.count() > 0:
             for idx, scene in enumerate(self.to_scenes.all()):
                 if idx == 0:
@@ -132,7 +132,17 @@ class Scene(NamedModel):
                 string_description = "".join((
                     string_description,
                     prefix,
-                    "is the path to {}".format(scene.name)
+                    "is the path to {}. ".format(scene.name)
+                ))
+            for idx, fscene in enumerate(self.from_scenes.all()):
+                if idx == 0:
+                    prefix = "Turning around, one way "
+                else:
+                    prefix = "Another way "
+                string_description = "".join((
+                    string_description,
+                    prefix,
+                    "leads back to {}. ".format(fscene.name)
                 ))
         return string_description
 

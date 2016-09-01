@@ -66,10 +66,16 @@ class AdventureTestCase(TestCase):
             'name': 'The Porridge Palace',
             'description': 'Porridge lines the walls and roof of this monument to hubris.',
         }
+        scene3_kwargs = {
+            'name': 'Dr. Bunbun\'s Mad Scientist Lair',
+            'description': 'A tacky billboard advertising toothpaste adorns the front of the building.'
+        }
         self.scene1 = Scene(**scene1_kwargs)
         self.scene2 = Scene(**scene2_kwargs)
+        self.scene3 = Scene(**scene3_kwargs)
         self.scene1.save()
         self.scene2.save()
+        self.scene3.save()
         self.player = Agent(**player_stats)
         self.player.save()
         self.enemy = Agent(**enemy_stats)
@@ -147,6 +153,7 @@ class AdventureTestCase(TestCase):
         self.assertEqual(self.player.hp, 84)
 
     def test_take_inventory(self):
+        # Scene has three rocks and a small piece of candy
         self.scene1.add_inventory(self.inventory1)
         self.scene1.add_inventory(self.inventory1)
         self.scene1.add_inventory(self.inventory1)
@@ -162,5 +169,25 @@ class AdventureTestCase(TestCase):
         self.assertEqual(self.player.owns_item(self.inventory1), False)
         self.assertEqual(self.player.owns_item(self.inventory2), True)
         self.assertEqual(self.scene1.scene_items.last().name, 'A rock')
+        self.player.take_inventory(0)
+        self.assertEqual(self.player.owns_item(self.inventory1), True)
+        self.assertEqual(self.player.agent_items.count(), 2)
+        self.assertEqual(self.player.agent_items.last().name, 'A small peanut candy')
 
-
+    def test_get_complete_description(self):
+        self.assertEqual(self.scene1.complete_description,
+                         'You find yourself at The Lake. It is wet and hot. There are bees in the distance.\n')
+        self.scene1.to_scenes.add(self.scene2)
+        self.assertEqual(self.scene1.complete_description,
+                         ''.join(('You find yourself at The Lake. ',
+                                  'It is wet and hot. There are bees ',
+                                  'in the distance.\nIn one direction, ',
+                                  'is the path to The Porridge Palace. ')))
+        self.assertEqual(self.scene2.from_scenes.count(), 1)
+        import pdb; pdb.set_trace()
+        self.assertEqual(self.scene2.complete_description,
+                         ''.join(('You find yourself at The Porridge Palace. ',
+                                  'Porridge lines the walls and roof of this monument to hubris. ',
+                                  'Turning around, one way leads back to The Lake. '))
+                         )
+        self.scene2.to_scenes.add(self.scene3)
