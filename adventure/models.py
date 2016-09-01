@@ -120,30 +120,38 @@ class Inventory(StatChanger):
 class Scene(NamedModel):
     to_scenes = models.ManyToManyField("self", related_name='from_scenes', symmetrical=False, blank=True)
 
+    def _render_scene_attribute(self, attributes, prefix_dict, identifier_strings, starting_string):
+        for attribute in attributes:
+            queryset = getattr(self, attribute).all()
+            for idx, item in enumerate(queryset.all()):
+                if idx == 0:
+                    prefix = prefix_dict.get(attribute)[0]
+                else:
+                    prefix = prefix_dict.get(attribute)[1]
+                starting_string = ''.join((
+                    starting_string,
+                    prefix,
+                    identifier_strings.get(attribute).format(item.name)
+                ))
+        return starting_string
+
     @property
     def complete_description(self):
         string_description = "You find yourself at {}. {}\n".format(self.name, self.description)
-        if self.to_scenes.count() > 0:
-            for idx, scene in enumerate(self.to_scenes.all()):
-                if idx == 0:
-                    prefix = "In one direction, "
-                else:
-                    prefix = "In another, "
-                string_description = "".join((
-                    string_description,
-                    prefix,
-                    "is the path to {}. ".format(scene.name)
-                ))
-            for idx, fscene in enumerate(self.from_scenes.all()):
-                if idx == 0:
-                    prefix = "Turning around, one way "
-                else:
-                    prefix = "Another way "
-                string_description = "".join((
-                    string_description,
-                    prefix,
-                    "leads back to {}. ".format(fscene.name)
-                ))
+        prefixes = {
+            'to_scenes': ('In one direction, ', 'In another, '),
+            'from_scenes': ('Turning around, one way ', 'Another way '),
+        }
+        identifier_strings = {
+            'to_scenes': 'is the path to {}. ',
+            'from_scenes': 'leads back to {}. '
+        }
+        string_description = self._render_scene_attribute(
+            ['to_scenes', 'from_scenes'],
+            prefixes,
+            identifier_strings,
+            string_description
+        )
         return string_description
 
     def add_inventory(self, inventory):

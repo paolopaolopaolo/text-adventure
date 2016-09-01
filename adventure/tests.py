@@ -184,10 +184,9 @@ class AdventureTestCase(TestCase):
                                   'in the distance.\nIn one direction, ',
                                   'is the path to The Porridge Palace. ')))
         self.assertEqual(self.scene2.from_scenes.count(), 1)
-        import pdb; pdb.set_trace()
         self.assertEqual(self.scene2.complete_description,
                          ''.join(('You find yourself at The Porridge Palace. ',
-                                  'Porridge lines the walls and roof of this monument to hubris. ',
+                                  'Porridge lines the walls and roof of this monument to hubris.\n',
                                   'Turning around, one way leads back to The Lake. '))
                          )
         self.scene2.to_scenes.add(self.scene3)
