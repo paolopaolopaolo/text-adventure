@@ -70,22 +70,26 @@ class AdventureTestCase(TestCase):
             'name': 'Dr. Bunbun\'s Mad Scientist Lair',
             'description': 'A tacky billboard advertising toothpaste adorns the front of the building.'
         }
+        # Scenes
         self.scene1 = Scene(**scene1_kwargs)
         self.scene2 = Scene(**scene2_kwargs)
         self.scene3 = Scene(**scene3_kwargs)
         self.scene1.save()
         self.scene2.save()
         self.scene3.save()
+        # Agents
         self.player = Agent(**player_stats)
         self.player.save()
         self.enemy = Agent(**enemy_stats)
         self.enemy.save()
+        # Moves
         self.move1 = Move(**move_stats1)
         self.move2 = Move(**move_stats2)
         self.move3 = Move(**move_stats3)
         self.move1.save()
         self.move2.save()
         self.move3.save()
+        # Inventories
         self.inventory1 = Inventory(**inventory1_kwargs)
         self.inventory2 = Inventory(**inventory2_kwargs)
         self.inventory1.save()
@@ -159,25 +163,34 @@ class AdventureTestCase(TestCase):
         self.scene1.add_inventory(self.inventory1)
         self.scene1.add_inventory(self.inventory2)
         self.assertEqual(Inventory.objects.count(), 6)
+        # Player placed in scene
         self.player.scene = self.scene1
         rocks = self.scene1.scene_items.filter(name__contains='rock')
         candy = self.scene1.scene_items.filter(name__contains='peanut')
+        # Ensure the scene gots the stuff
         self.assertEqual(len(rocks), 3)
         self.assertEqual(len(candy), 1)
+        # The last peanut candy
         self.assertEqual(self.scene1.scene_items.last().name, 'A small peanut candy')
+        # Player takes the peanut candy (added last)
         self.player.take_inventory(3)
+        # Player owns only the last peanut candy
         self.assertEqual(self.player.owns_item(self.inventory1), False)
         self.assertEqual(self.player.owns_item(self.inventory2), True)
         self.assertEqual(self.scene1.scene_items.last().name, 'A rock')
+        # Player takes the first item
         self.player.take_inventory(0)
         self.assertEqual(self.player.owns_item(self.inventory1), True)
         self.assertEqual(self.player.agent_items.count(), 2)
         self.assertEqual(self.player.agent_items.last().name, 'A small peanut candy')
 
     def test_get_complete_description(self):
+        # Show a description
         self.assertEqual(self.scene1.complete_description,
                          'You find yourself at The Lake. It is wet and hot. There are bees in the distance.\n')
+        # Add scene
         self.scene1.to_scenes.add(self.scene2)
+
         expected_description1 = ''.join(('You find yourself at The Lake. ',
                                          'It is wet and hot. There are bees ',
                                          'in the distance.\nIn one direction ',
@@ -191,13 +204,16 @@ class AdventureTestCase(TestCase):
                                          'Turning around, one way leads back to The Lake. '))
         expected_description4 = ''.join(('You find yourself at The Porridge Palace. ',
                                          'Porridge lines the walls and roof of this monument to hubris.\n',
-                                         'Here, there is one who looks like they go by Mr. Snuffles. '
+                                         'Here is one who looks like they go by Mr. Snuffles. '
                                          'In one direction is the path to Dr. Bunbun\'s Mad Scientist Lair. ',
                                          'Turning around, one way leads back to The Lake. '))
+
         self.assertEqual(self.scene1.complete_description, expected_description1)
         self.assertEqual(self.scene2.from_scenes.count(), 1)
         self.assertEqual(self.scene2.complete_description, expected_description2)
+        # Add another scene
         self.scene2.to_scenes.add(self.scene3)
+
         self.assertEqual(self.scene2.complete_description, expected_description3)
         self.player.scene = self.scene2
         self.player.save()

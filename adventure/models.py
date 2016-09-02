@@ -139,14 +139,14 @@ class Scene(NamedModel):
     def complete_description(self):
         string_description = "You find yourself at {}. {}\n".format(self.name, self.description)
         prefixes = {
-            'agents': ('Here, there is one ', 'There is one '),
+            'agents': ('Here is one ', 'There is one '),
             'to_scenes': ('In one direction ', 'In another, '),
             'from_scenes': ('Turning around, one way ', 'Another way '),
         }
         identifier_strings = {
             'to_scenes': 'is the path to {}. ',
             'from_scenes': 'leads back to {}. ',
-            'agents': 'who looks like they go by {}. '
+            'agents': 'who looks like they go by {}. ',
         }
         string_description = self._render_scene_attribute(
             ['agents', 'to_scenes', 'from_scenes'],
@@ -156,8 +156,21 @@ class Scene(NamedModel):
         )
         return string_description
 
+    @property
+    def direction_menu(self):
+        menu = 'Option:\tScene:'
+        for idx, scene in enumerate(self.to_scenes):
+            menu = '\n'.join((menu, scene.name))
+        for idx, scene in enumerate(self.from_scenes):
+            menu = '\n'.join((menu, 'Back to {}'.format(scene.name)))
+        return menu
+
     def add_inventory(self, inventory):
         new_item = Inventory.objects.get(id=inventory.id)
         new_item.id = None
         new_item.found_location = self
         new_item.save()
+
+
+class Story(NamedModel):
+    first_scene = models.ForeignKey(Scene)

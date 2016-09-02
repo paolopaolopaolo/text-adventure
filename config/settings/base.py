@@ -21,7 +21,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'compressor',
     'rest_framework',
-    'adventure'
+    'adventure',
+    'game_mechanics'
 )
 
 MIDDLEWARE_CLASSES = (
