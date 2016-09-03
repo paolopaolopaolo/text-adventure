@@ -142,17 +142,15 @@ class Scene(NamedModel):
     def complete_description(self):
         string_description = "You find yourself at {}. {}\n".format(self.name, self.description)
         prefixes = {
-            'agents': ('Here is one ', 'There is one '),
             'to_scenes': ('In one direction ', 'In another, '),
             'from_scenes': ('Turning around, one way ', 'Another way '),
         }
         identifier_strings = {
             'to_scenes': 'is the path to {}. ',
             'from_scenes': 'leads back to {}. ',
-            'agents': 'who looks like they go by {}. ',
         }
         string_description = self._render_scene_attribute(
-            ['agents', 'to_scenes', 'from_scenes'],
+            ['to_scenes', 'from_scenes'],
             prefixes,
             identifier_strings,
             string_description

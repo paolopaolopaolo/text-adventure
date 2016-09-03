@@ -202,11 +202,6 @@ class AdventureTestCase(TestCase):
                                          'Porridge lines the walls and roof of this monument to hubris.\n',
                                          'In one direction is the path to Dr. Bunbun\'s Mad Scientist Lair. ',
                                          'Turning around, one way leads back to The Lake. '))
-        expected_description4 = ''.join(('You find yourself at The Porridge Palace. ',
-                                         'Porridge lines the walls and roof of this monument to hubris.\n',
-                                         'Here is one who looks like they go by Mr. Snuffles. '
-                                         'In one direction is the path to Dr. Bunbun\'s Mad Scientist Lair. ',
-                                         'Turning around, one way leads back to The Lake. '))
 
         self.assertEqual(self.scene1.complete_description, expected_description1)
         self.assertEqual(self.scene2.from_scenes.count(), 1)
@@ -215,7 +210,3 @@ class AdventureTestCase(TestCase):
         self.scene2.to_scenes.add(self.scene3)
 
         self.assertEqual(self.scene2.complete_description, expected_description3)
-        self.player.scene = self.scene2
-        self.player.save()
-        self.assertEqual(self.scene2.complete_description, expected_description4)
-

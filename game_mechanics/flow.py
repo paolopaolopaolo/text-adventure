@@ -49,16 +49,22 @@ class FlowRunner:
                 'type',
                 'effect_magnitude'
             )
-            move_choice.append(move)
-            excluded_moves.append(move.id)
-            choice_num -= 1
+            if move:
+                move_choice.append(move)
+                excluded_moves.append(move.id)
+                choice_num -= 1
         for move in move_choice:
             character.learn_move(move)
         self.character = character
 
+    @classmethod
+    def print_header(cls, word):
+        print('##{}##'.format('=' * (len(word))))
+
     def start(self):
-        print(self.adventure.name)
-        print(self.adventure.description)
+        self.print_header(self.adventure.name)
+        print('  {}'.format(self.adventure.name))
+        self.print_header(self.adventure.name)
         self.character.scene = self.adventure.first_scene
         self.main_loop()
 
@@ -122,8 +128,8 @@ class FlowRunner:
                 'Actions:'
             )
             if choice:
-                os.system('clear')
                 choice.method()
+                os.system('clear')
         print('GAME OVER')
 
     def initiate_flow(self):
