@@ -1,27 +1,31 @@
 from adventure.models import Agent, Story, Move
 import os
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
+
+class MenuItem:
+
+    def __init__(self, *args):
+        self.name, self.method = args
 
 
 class FlowRunner:
-    adventure = None
-    character = None
+
+    def __init__(self):
+        self.adventure = None
+        self.character = None
 
     def choose_story(self):
         stories = Story.objects.all()
-        story_menu = 'Option:\tAdventure Name:'
-        for idx, story in enumerate(stories):
-            story_menu = '\n'.join((
-                '{}\t{}'.format(idx, story.name),
-            ))
-        print(story_menu)
-        story_choice = stories[input('Choose your adventure (option number): ')]
-        self.adventure = story_choice
+        story_choice = self.menu_ify_queryset(stories,
+                                              'Adventure Name:')
+        if story_choice:
+            self.adventure = story_choice
+        else:
+            self.choose_story()
 
     def create_character(self):
         move_choice = []
-        random_moves = Move.objects.filter(special_move=False).order_by('?')[5]
+        excluded_moves = []
         name = input('What is your character\'s name?: ')
         description = input('Tell us about this character: ')
         character = Agent(type='PNR',
@@ -32,47 +36,71 @@ class FlowRunner:
                           attack_dmg=0,
                           spc_attack_dmg=0)
         character.save()
-        random_move_menu_header = 'Option:\tAdventure Name:\tType:\tEffect:'
+        choice_num = 5
+
         while len(move_choice) < 3:
-            random_move_menu = random_move_menu_header
-            for idx, move in enumerate(random_moves):
-                random_move_menu = '\n'.join((
-                    random_move_menu,
-                    '{}\t{}\t{}\t{}'.format(idx, move.name, move.type, move.effect_magnitude),
-                ))
-            move_to_add = random_moves[input('Choose a move (option number): ')]
-            move_choice.append(move_to_add)
-            random_moves = random_moves.exclude(id=move_to_add.id)
+            random_moves = Move.objects\
+                               .filter(user=None, special_move=False)\
+                               .exclude(id__in=excluded_moves)\
+                               .order_by('?')[:choice_num]
+            move = self.menu_ify_queryset(
+                random_moves,
+                'Move Name:\tType:\tEffect:',
+                'type',
+                'effect_magnitude'
+            )
+            move_choice.append(move)
+            excluded_moves.append(move.id)
+            choice_num -= 1
         for move in move_choice:
             character.learn_move(move)
         self.character = character
 
     def start(self):
+        print(self.adventure.name)
         print(self.adventure.description)
         self.character.scene = self.adventure.first_scene
         self.main_loop()
 
-    def navigate(self):
-        scene_keys = []
-        scene_destinations = "Option:\tPath to:\t"
-        for idx, scene in enumerate(self.character.scene.to_scenes.all()):
-            scene_destinations = '\n'.join((
-                scene_destinations,
-                '{}\t{}'.format(idx, scene.name)
+    @classmethod
+    def menu_ify_queryset(cls, queryset, header_value, *args, use_header=True):
+        keys = []
+        if use_header:
+            header = 'Option:\t{}'.format(header_value)
+        else:
+            header = ''
+        for idx, item in enumerate(queryset):
+            other_args = [getattr(item, attr) for attr in args]
+            values = [idx, item.name]
+            values.extend(other_args)
+            header = '\n'.join((
+                header,
+                '\t'.join([str(value) for value in values])
             ))
-            scene_keys.append(scene)
-        for idx, scene in enumerate(self.character.scene.from_scenes.all()):
-            scene_destinations = '\n'.join((
-                scene_destinations,
-                '{}\t{}'.format(idx + self.character.scene.to_scenes.count(), scene.name)
-            ))
-            scene_keys.append(scene)
+            keys.append(item)
+        print(header)
+        choice = input('Option: ')
         try:
-            scene_to_switch_to = scene_keys[input('Option: ')]
-            self.character.scene = scene_to_switch_to
+            choice = int(choice)
+        except ValueError:
+            choice = None
+        if choice is not None:
+            try:
+                chosen_item = keys[choice]
+                return chosen_item
+            except IndexError:
+                print('No option')
+        return
+
+    def navigate(self):
+        choice = self.menu_ify_queryset(
+            (self.character.scene.to_scenes.all() |
+             self.character.scene.from_scenes.all()),
+            'Path to:'
+        )
+        if choice:
+            self.character.scene = choice
             self.character.save()
-        except KeyError:
-            pass
 
     def use_inventory(self):
         pass
@@ -82,28 +110,27 @@ class FlowRunner:
 
     def main_loop(self):
         menu_items = [
-            ('Navigate', self.navigate),
-            ('Check Inventory', self.use_inventory),
-            ('Take item', self.take_item)
+            MenuItem('Navigate', self.navigate),
+            MenuItem('Check Inventory', self.use_inventory),
+            MenuItem('Take item', self.take_item)
         ]
 
         while self.character.hp > 0:
             print(self.character.scene.complete_description)
-            menu_table = "MENU:\nOption:\tIndex:"
-            for idx, item in enumerate(menu_items):
-                menu_table = '\n'.join((
-                    menu_table,
-                    '{}\t{}'.format(idx, item)
-                ))
-            print(menu_table)
-            menu_items[int(input('Option: '))][1]()
+            choice = self.menu_ify_queryset(
+                menu_items,
+                'Actions:'
+            )
+            if choice:
+                os.system('clear')
+                choice.method()
         print('GAME OVER')
 
     def initiate_flow(self):
         self.choose_story()
-        print('Story Chosen!')
+        os.system('clear')
         self.create_character()
-        print('Character created!')
+        os.system('clear')
         self.start()
 
 if __name__ == '__main__':

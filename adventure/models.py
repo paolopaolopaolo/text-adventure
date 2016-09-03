@@ -40,6 +40,9 @@ class NamedModel(models.Model):
         dict_item = model_to_dict(self, fields=compare_fields)
         return dict_item
 
+    def __str__(self):
+        return self.name
+
 
 class StatChanger(NamedModel):
     type = models.CharField(max_length=3, choices=MOVE_EFFECT_TYPES)
