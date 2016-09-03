@@ -1,4 +1,7 @@
 from adventure.models import Agent, Story, Move
+import os
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
 
 
 class FlowRunner:
@@ -47,18 +50,53 @@ class FlowRunner:
     def start(self):
         print(self.adventure.description)
         self.character.scene = self.adventure.first_scene
+        self.main_loop()
 
-    def go_command(self):
+    def navigate(self):
+        scene_keys = []
+        scene_destinations = "Option:\tPath to:\t"
+        for idx, scene in enumerate(self.character.scene.to_scenes.all()):
+            scene_destinations = '\n'.join((
+                scene_destinations,
+                '{}\t{}'.format(idx, scene.name)
+            ))
+            scene_keys.append(scene)
+        for idx, scene in enumerate(self.character.scene.from_scenes.all()):
+            scene_destinations = '\n'.join((
+                scene_destinations,
+                '{}\t{}'.format(idx + self.character.scene.to_scenes.count(), scene.name)
+            ))
+            scene_keys.append(scene)
+        try:
+            scene_to_switch_to = scene_keys[input('Option: ')]
+            self.character.scene = scene_to_switch_to
+            self.character.save()
+        except KeyError:
+            pass
+
+    def use_inventory(self):
+        pass
+
+    def take_item(self):
+        pass
 
     def main_loop(self):
-        menu_items = {
-            '0': ''
-        }
+        menu_items = [
+            ('Navigate', self.navigate),
+            ('Check Inventory', self.use_inventory),
+            ('Take item', self.take_item)
+        ]
+
         while self.character.hp > 0:
             print(self.character.scene.complete_description)
-            for idx, item in
-
-            input('doot')
+            menu_table = "MENU:\nOption:\tIndex:"
+            for idx, item in enumerate(menu_items):
+                menu_table = '\n'.join((
+                    menu_table,
+                    '{}\t{}'.format(idx, item)
+                ))
+            print(menu_table)
+            menu_items[int(input('Option: '))][1]()
         print('GAME OVER')
 
     def initiate_flow(self):
@@ -67,3 +105,7 @@ class FlowRunner:
         self.create_character()
         print('Character created!')
         self.start()
+
+if __name__ == '__main__':
+    flow = FlowRunner()
+    flow.initiate_flow()

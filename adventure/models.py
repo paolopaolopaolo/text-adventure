@@ -25,7 +25,7 @@ INVENTORY_TYPE = (
 
 class NamedModel(models.Model):
     name = models.CharField(max_length=50, default='')
-    description = models.CharField(max_length=100, default='')
+    description = models.CharField(max_length=1000, default='')
     compare_fields = []
 
     class Meta:
@@ -113,8 +113,8 @@ class Inventory(StatChanger):
         'inventory_type',
         'effect_magnitude',
     ]
-    found_location = models.ForeignKey("Scene", related_name='scene_items', null=True)
-    owner = models.ForeignKey("Agent", related_name='agent_items', null=True)
+    found_location = models.ForeignKey("Scene", related_name='scene_items', null=True, blank=True)
+    owner = models.ForeignKey("Agent", related_name='agent_items', null=True, blank=True)
 
 
 class Scene(NamedModel):
