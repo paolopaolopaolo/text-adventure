@@ -40,7 +40,7 @@ class FlowRunner:
                 )
         else:
             description = input('Tell us about this character: ')
-            character = Agent(type='PNR',
+            character = Agent(type='PLR',
                               name=name,
                               description=description,
                               hp=100,
