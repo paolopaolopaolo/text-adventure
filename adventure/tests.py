@@ -222,10 +222,12 @@ You find something here.
 %%%%%%%%%%%%%%%%%%%%
 A small peanut candy
 --------------------
-It was forged in a delicious fire
+Affects: HP
+By: 2
 
 %%%%%%
 A rock
 ------
-A small, handy piece of earth
+Affects: SAD
+By: 10
 """)
