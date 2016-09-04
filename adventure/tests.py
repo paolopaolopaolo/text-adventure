@@ -173,13 +173,13 @@ class AdventureTestCase(TestCase):
         # The last peanut candy
         self.assertEqual(self.scene1.scene_items.last().name, 'A small peanut candy')
         # Player takes the peanut candy (added last)
-        self.player.take_inventory(3)
+        self.player.take_inventory(candy.first())
         # Player owns only the last peanut candy
         self.assertEqual(self.player.owns_item(self.inventory1), False)
         self.assertEqual(self.player.owns_item(self.inventory2), True)
         self.assertEqual(self.scene1.scene_items.last().name, 'A rock')
         # Player takes the first item
-        self.player.take_inventory(0)
+        self.player.take_inventory(rocks.first())
         self.assertEqual(self.player.owns_item(self.inventory1), True)
         self.assertEqual(self.player.agent_items.count(), 2)
         self.assertEqual(self.player.agent_items.last().name, 'A small peanut candy')

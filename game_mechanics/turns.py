@@ -16,6 +16,18 @@ def apply_effect_stat(current_magnitude, buff):
     return current_magnitude
 
 
+def apply_item(entity, item):
+    target_var = MOVE_EFFECTS.get(item.type)
+    magnitude = item.effect_magnitude
+    current_value = getattr(entity,
+                            target_var)
+    setattr(entity,
+            target_var,
+            current_value + magnitude
+            )
+    entity.save()
+
+
 def apply_move(agent, entity, move):
     target_var = MOVE_EFFECTS.get(move.type)
     magnitude = move.effect_magnitude

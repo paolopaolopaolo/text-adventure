@@ -1,6 +1,6 @@
 from django.db import models
 from django.forms.models import model_to_dict
-from game_mechanics.turns import apply_move
+from game_mechanics.turns import apply_move, apply_item
 
 MOVE_EFFECT_TYPES = (
     ('HP', 'HP Effect'),
@@ -83,15 +83,23 @@ class Agent(NamedModel):
         move = self.moves.all().order_by('id')[idx]
         apply_move(self, entity, move)
 
-    def take_inventory(self, idx):
-        inventory = self.scene.scene_items.all().order_by('id')[idx]
+    def show_inventory(self):
+        print("INVENTORY:")
+        for item in self.agent_items.all():
+            print("="*len(item.name))
+            print(item.name)
+            print("="*len(item.name))
+            print("{}:{}".format(item.type,
+                                 item.effect_magnitude))
+            print("")
+
+    def take_inventory(self, inventory):
         inventory.owner = self
         inventory.found_location = None
         inventory.save()
 
-    def use_inventory(self, idx):
-        item = self.agent_items.all().order_by('id')[idx]
-        apply_move(self, self, item)
+    def use_inventory(self, item):
+        apply_item(self, item)
         item.delete()
 
 
@@ -122,6 +130,7 @@ class Inventory(StatChanger):
 
 class Scene(NamedModel):
     to_scenes = models.ManyToManyField("self", related_name='from_scenes', symmetrical=False, blank=True)
+    story = models.ForeignKey('Story', related_name='scenes', null=True, blank=True)
 
     def _render_scene_attribute(self, attributes, prefix_dict, identifier_strings, starting_string):
         for attribute in attributes:
@@ -139,7 +148,25 @@ class Scene(NamedModel):
         return starting_string
 
     def agent_description(self, current_agent):
-        pass
+        other_agents = self.agents.exclude(id=current_agent.id).all()
+        if other_agents.count() > 0:
+            message = "\n".join((
+                "=" * 26,
+                "You see other people here.",
+                "=" * 26,
+                ""
+            ))
+            for agent in other_agents:
+                message = "\n".join((
+                    message,
+                    "%" * len(agent.name),
+                    agent.name,
+                    "-" * len(agent.name),
+                    agent.description,
+                    ''
+                ))
+            return message
+        return
 
     def inventory_description(self):
         item_description = "\n".join((
@@ -154,7 +181,8 @@ class Scene(NamedModel):
                 "%" * len(item.name),
                 item.name,
                 "-" * len(item.name),
-                item.description,
+                'Affects: {}'.format(item.type),
+                'By: {}'.format(item.effect_magnitude),
                 ''
             ))
         return item_description
@@ -178,15 +206,6 @@ class Scene(NamedModel):
         )
         return string_description
 
-    @property
-    def direction_menu(self):
-        menu = 'Option:\tScene:'
-        for idx, scene in enumerate(self.to_scenes):
-            menu = '\n'.join((menu, scene.name))
-        for idx, scene in enumerate(self.from_scenes):
-            menu = '\n'.join((menu, 'Back to {}'.format(scene.name)))
-        return menu
-
     def add_inventory(self, inventory):
         new_item = Inventory.objects.get(id=inventory.id)
         new_item.id = None
@@ -195,4 +214,4 @@ class Scene(NamedModel):
 
 
 class Story(NamedModel):
-    first_scene = models.ForeignKey(Scene)
+    first_scene = models.ForeignKey(Scene, related_name='stories')

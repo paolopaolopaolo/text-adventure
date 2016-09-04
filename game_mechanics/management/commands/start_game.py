@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = 'Closes the specified poll for voting'
+    help = 'Runs the Text Adventure Game'
 
     def handle(self, *args, **options):
         flow = FlowRunner()
