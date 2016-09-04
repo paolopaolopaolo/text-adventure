@@ -138,6 +138,27 @@ class Scene(NamedModel):
                 ))
         return starting_string
 
+    def agent_description(self, current_agent):
+        pass
+
+    def inventory_description(self):
+        item_description = "\n".join((
+            "=" * 24,
+            "You find something here.",
+            "=" * 24,
+            ""
+        ))
+        for item in self.scene_items.all():
+            item_description = "\n".join((
+                item_description,
+                "%" * len(item.name),
+                item.name,
+                "-" * len(item.name),
+                item.description,
+                ''
+            ))
+        return item_description
+
     @property
     def complete_description(self):
         string_description = "You find yourself at {}. {}\n".format(self.name, self.description)

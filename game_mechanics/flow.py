@@ -65,6 +65,7 @@ class FlowRunner:
         self.print_header(self.adventure.name)
         print('  {}'.format(self.adventure.name))
         self.print_header(self.adventure.name)
+        print(self.adventure.description)
         self.character.scene = self.adventure.first_scene
         self.main_loop()
 

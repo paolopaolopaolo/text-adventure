@@ -210,3 +210,22 @@ class AdventureTestCase(TestCase):
         self.scene2.to_scenes.add(self.scene3)
 
         self.assertEqual(self.scene2.complete_description, expected_description3)
+
+    def test_inventory_description(self):
+        self.scene1.add_inventory(self.inventory1)
+        self.scene1.add_inventory(self.inventory2)
+        self.assertEqual(self.scene1.inventory_description(),
+                         """========================
+You find something here.
+========================
+
+%%%%%%%%%%%%%%%%%%%%
+A small peanut candy
+--------------------
+It was forged in a delicious fire
+
+%%%%%%
+A rock
+------
+A small, handy piece of earth
+""")
