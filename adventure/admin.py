@@ -18,12 +18,14 @@ class AgentTypeFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value() == 'enemy':
-            return queryset.filter(type='EN')
-        if self.value() == 'enemy_primitive':
+            return queryset.filter(type='EN').exclude(scene=None)
+        elif self.value() == 'enemy_primitive':
             return queryset.filter(type='EN', scene=None)
-        if self.value() == 'player':
+        elif self.value() == 'player':
             return queryset.filter(type='PLR')
-        if self.value() == 'npc_primitive':
+        elif self.value() == 'npc':
+            return queryset.filter(type='NPC').exclude(scene=None)
+        elif self.value() == 'npc_primitive':
             return queryset.filter(type='NPC', scene=None)
 
 

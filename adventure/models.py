@@ -60,7 +60,7 @@ class Agent(NamedModel):
     spc_attack_dmg = models.IntegerField()
     hp = models.IntegerField()
     mp = models.IntegerField()
-    scene = models.ForeignKey('Scene', related_name='agents', null=True)
+    scene = models.ForeignKey('Scene', related_name='agents', null=True, blank=True)
 
     def knows_move(self, move):
         move = move.dict
@@ -79,9 +79,9 @@ class Agent(NamedModel):
             new_move.user = self
             new_move.save()
 
-    def use_move(self, entity, idx):
-        move = self.moves.all().order_by('id')[idx]
-        apply_move(self, entity, move)
+    def use_move(self, entity, move):
+        effect = apply_move(self, entity, move)
+        return effect
 
     def show_inventory(self):
         print("INVENTORY:")
@@ -148,7 +148,7 @@ class Scene(NamedModel):
         return starting_string
 
     def agent_description(self, current_agent):
-        other_agents = self.agents.exclude(id=current_agent.id).all()
+        other_agents = self.agents.exclude(id=current_agent.id).filter(hp__gt=0).all()
         if other_agents.count() > 0:
             message = "\n".join((
                 "=" * 26,
@@ -186,6 +186,12 @@ class Scene(NamedModel):
                 ''
             ))
         return item_description
+
+    def add_enemy(self, enemy):
+        enemy_copy = enemy
+        enemy_copy.id = None
+        enemy_copy.scene = self
+        enemy_copy.save()
 
     @property
     def complete_description(self):

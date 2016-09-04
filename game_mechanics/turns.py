@@ -48,3 +48,4 @@ def apply_move(agent, entity, move):
     if move.special_move:
         agent.mp -= 1
         agent.save()
+    return magnitude
