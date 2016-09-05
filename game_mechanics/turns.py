@@ -26,6 +26,7 @@ def apply_item(entity, item):
             current_value + magnitude
             )
     entity.save()
+    return magnitude
 
 
 def apply_move(agent, entity, move):

@@ -115,9 +115,10 @@ class FlowRunner:
         return
 
     def navigate(self):
+        all_scenes = [scene for scene in self.character.scene.to_scenes.all()]
+        all_scenes.extend([scene for scene in self.character.scene.from_scenes.all()])
         choice = self.menuify_queryset(
-            (self.character.scene.to_scenes.all() |
-             self.character.scene.from_scenes.all()),
+            all_scenes,
             'Path to:'
         )
         if choice is not None:
@@ -162,24 +163,34 @@ attack: {}
         else:
             return
 
+    def add_all_items(self):
+        for item in self.character.scene.scene_items.all():
+            self.character.take_inventory(item)
+
     def find_items(self):
+        items = [it for it in self.character.scene.scene_items.order_by('id').all()]
+        items.append(MenuItem('All', self.add_all_items))
         if self.character.scene.scene_items.count() == 0:
             print('++++++++++++++++++++++++')
             print('There are no items here.')
             print('++++++++++++++++++++++++')
             return
         print(self.character.scene.inventory_description())
-        item = self.menuify_queryset(self.character.scene.scene_items.order_by('id').all(),
+        item = self.menuify_queryset(items,
                                      'Item:')
         if item is not None:
-            self.character.take_inventory(item)
-            os.system('clear')
+            if item.name == 'All':
+                item.method()
+            else:
+                self.character.take_inventory(item)
+                os.system('clear')
 
     def fight_enemy(self, player, enemy):
         def combat_loop():
             actors = [enemy, player]
             random.shuffle(actors)
             current_actor_idx = 0
+            print("You engage {} in a combat sequence TO THE DEATH".format(enemy.name))
             while player.hp > 0 and enemy.hp > 0:
                 # Current actor uses move
                 current_actor = actors[current_actor_idx]
@@ -188,10 +199,12 @@ attack: {}
                     if move.effect_magnitude < 0:
                         effect = current_actor.use_move(player, move)
                         print("{} uses {}!".format(current_actor.name, move.name))
+                        print(move.description)
                         print("Your {} stat is decreases by {}!".format(move.type, effect))
                     else:
                         effect = current_actor.use_move(enemy, move)
                         print("{} uses {}!".format(current_actor.name, move.name))
+                        print(move.description)
                         print("{}'s {} stat increases by {}!".format(enemy.name, move.type, move.effect_magnitude))
                 else:
                     potential_moves = [move for move in player.moves.all()]
@@ -199,20 +212,27 @@ attack: {}
                     potential_moves.extend(potential_items)
                     move = self.menuify_queryset(potential_moves,
                                                  "Move/Item:")
+                    os.system('clear')
                     if isinstance(move, Move):
                         if move.effect_magnitude < 0:
                             effect = current_actor.use_move(enemy, move)
-                            print("{} uses {}!".format(current_actor.name, move.name))
+                            print("You use {}!".format(move.name))
+                            print(move.description)
                             print("{}'s {} stat is decreases by {}!".format(enemy.name,
                                                                             move.type,
                                                                             effect))
                         else:
                             effect = current_actor.use_move(current_actor, move)
-                            print("{} uses {}!".format(current_actor.name, move.name))
+                            print("You use {}!".format(current_actor.name, move.name))
+                            print(move.description)
                             print("Your {} stat increases by {}!".format(move.type,
                                                                          effect))
                     if isinstance(move, Inventory):
-                        current_actor.use_inventory(move)
+                        effect = current_actor.use_inventory(move)
+                        print("You use {}!".format(move.name))
+                        print(move.description)
+                        print("Your {} stat increases by {}!".format(move.type,
+                                                                     effect))
 
                 # Toggle current actor
                 if current_actor_idx:

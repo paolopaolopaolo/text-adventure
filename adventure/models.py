@@ -99,8 +99,9 @@ class Agent(NamedModel):
         inventory.save()
 
     def use_inventory(self, item):
-        apply_item(self, item)
+        effect = apply_item(self, item)
         item.delete()
+        return effect
 
 
 class Move(StatChanger):
