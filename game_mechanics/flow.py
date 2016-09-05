@@ -48,13 +48,12 @@ class FlowRunner:
                               attack_dmg=0,
                               spc_attack_dmg=0)
             character.save()
-            choice_num = 5
 
             while len(move_choice) < 3:
                 random_moves = Move.objects\
                                    .filter(user=None)\
                                    .exclude(id__in=excluded_moves)\
-                                   .order_by('?')[:choice_num]
+                                   .all()
                 move = self.menuify_queryset(
                     random_moves,
                     'Move Name:\tType:\tEffect:\tIsSpecial:',
@@ -65,7 +64,6 @@ class FlowRunner:
                 if move:
                     move_choice.append(move)
                     excluded_moves.append(move.id)
-                    choice_num -= 1
             for move in move_choice:
                 character.learn_move(move)
             self.character = character
@@ -387,10 +385,12 @@ attack: {}
             self.choose_story()
             os.system('clear')
             self.create_character()
-            enemy_count = random.randrange(1, 10)
-            self.add_enemies(num_enemies=enemy_count)
-            inventory_count = random.randrange(10, 25)
-            self.sprinkle_inventory(inventory_count)
+            reset_game = input('Reset game? (y/n): ').lower()
+            if reset_game == 'y':
+                enemy_count = random.randrange(4, 15)
+                self.add_enemies(num_enemies=enemy_count)
+                inventory_count = random.randrange(10, 25)
+                self.sprinkle_inventory(inventory_count)
             os.system('clear')
             self.start()
         except KeyboardInterrupt:
