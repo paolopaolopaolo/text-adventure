@@ -1,0 +1,8 @@
+[all:vars]
+env=public
+
+[appservers]
+vault.dpmercado.com
+
+[dbservers]
+104.236.223.4

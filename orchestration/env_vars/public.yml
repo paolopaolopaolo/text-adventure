@@ -1,0 +1,49 @@
+---
+env: "public"
+project_path: "/server/{{ application_name }}"
+
+# Git settings.
+setup_git_repo: yes
+git_branch: develop
+
+
+# Database settings.
+db_user: "{{ application_name }}"
+db_name: "{{ application_name }}"
+db_password: "{{ lookup('vault', 'secret/textadventure_public', 'db_password', 'vault_textadventure.json') }}"
+
+# Email settings
+email_host: "{{ lookup('vault', 'secret/textadventure_public', 'email_host', 'vault_textadventure.json') }}"
+email_host_password: "{{ lookup('vault', 'secret/textadventure_public', 'email_host_password', 'vault_textadventure.json') }}"
+email_host_user: "{{ lookup('vault', 'secret/textadventure_public', 'email_host_user', 'vault_textadventure.json') }}"
+email_port: "{{ lookup('vault', 'secret/textadventure_public', 'email_port', 'vault_textadventure.json') }}"
+
+# Gunicorn settings. For the number of workers, a good rule to follow is
+# 2 x number of CPUs + 1
+gunicorn_num_workers: 2
+gunicorn_user: "{{ application_name }}"
+
+# Setting this to 1 will restart the Gunicorn process each time
+# you make a request, basically reloading the code. Very handy
+# when developing. Set to 0 for unlimited requests (default).
+gunicorn_max_requests: 0
+
+
+# Nginx settings.
+nginx_server_name: "{{ inventory_hostname }}"
+ssl_src_dir: ssl_self_signed
+ssl_dest_dir: /etc/ssl
+ssl_key_password: password
+ssl_enabled: no
+
+# Application settings.
+private_application_hosts: ['vault.dpmercado.com', ]
+
+# Application settings.
+django_settings_file: "config.settings.pub"
+django_secret_key: "{{ lookup('vault', 'secret/textadventure_public', 'secret_key', 'vault_textadventure.json') }}"
+
+run_django_db_migrations: yes
+run_django_collectstatic: yes
+
+bashrc_path: "/root/.bashrc"
