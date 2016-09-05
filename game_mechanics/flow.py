@@ -387,9 +387,19 @@ attack: {}
             self.create_character()
             reset_game = input('Reset game? (y/n): ').lower()
             if reset_game == 'y':
-                enemy_count = random.randrange(4, 15)
+                lowrange = self.adventure.scenes.count() - 2
+                highrange = self.adventure.scenes.count()
+                try:
+                    density = float(input('Enemy Density? (~# of enemies per scene): '))
+                except ValueError:
+                    density = 0.75
+                enemy_count = random.randrange(int(density*lowrange), int(density*highrange))
                 self.add_enemies(num_enemies=enemy_count)
-                inventory_count = random.randrange(10, 25)
+                try:
+                    density = float(input('Item Density? (~# of items per scene): '))
+                except ValueError:
+                    density = 2.0
+                inventory_count = random.randrange(int(density*lowrange), int(density*highrange))
                 self.sprinkle_inventory(inventory_count)
             os.system('clear')
             self.start()
