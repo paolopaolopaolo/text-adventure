@@ -223,7 +223,7 @@ attack: {}
                                                                             effect))
                         else:
                             effect = current_actor.use_move(current_actor, move)
-                            print("You use {}!".format(current_actor.name, move.name))
+                            print("You use {}!".format(move.name))
                             print(move.description)
                             print("Your {} stat increases by {}!".format(move.type,
                                                                          effect))
