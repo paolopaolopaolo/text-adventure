@@ -280,13 +280,13 @@ attack: {}
                     if isinstance(move, Inventory):
                         effect = current_actor.use_inventory(move)
                         print("You use {}!".format(move.name))
-                        print(re.sub(r'\\n', 'r', move.description))
+                        print(re.sub(r'\\n', '\n', move.description))
                         print("Your {} stat increases by {}!".format(move.type,
                                                                      effect))
                     if isinstance(move, MenuItem):
                         effect, type, description = move.method()
                         print("You use {}!".format(move.name))
-                        print(re.sub(r'\\n', 'r', description))
+                        print(re.sub(r'\\n', '\n', description))
                         print("Your {} stat increases by {}!".format(type,
                                                                      effect))
 
@@ -343,7 +343,8 @@ attack: {}
     def random_enemy(self):
         enemy_pool = Agent.objects\
                           .filter(type='EN',
-                                  scene=None)
+                                  scene=None,
+                                  is_boss=False)
         enemies = [enem for enem in enemy_pool.all()]
         enemy_choice = random.choice(enemies)
         return enemy_choice
@@ -365,7 +366,7 @@ attack: {}
     def add_enemies(self, num_enemies=5):
         # Clear enemies
         for scene in self.adventure.scenes.all():
-            scene.agents.filter(type='EN', is_boss=False).all().delete()
+            scene.agents.filter(type='EN').all().delete()
         # Add random enemies to random scenes
         for times in range(num_enemies):
             random_enemy = self.random_enemy()
