@@ -30,10 +30,12 @@ def apply_item(entity, item):
 
 
 def apply_move(agent, entity, move):
+    if move.special_move and agent.mp <= 0:
+        return 0
     target_var = MOVE_EFFECTS.get(move.type)
     magnitude = move.effect_magnitude
     if move.type == 'HP':
-        if move.special_move and agent.mp > 0:
+        if move.special_move:
             agent_buff = agent.spc_attack_dmg
         else:
             agent_buff = agent.attack_dmg

@@ -58,6 +58,7 @@ class Agent(NamedModel):
     type = models.CharField(max_length=3, choices=AGENT_TYPES)
     attack_dmg = models.IntegerField()
     spc_attack_dmg = models.IntegerField()
+    is_boss = models.BooleanField(default=False)
     hp = models.IntegerField()
     mp = models.IntegerField()
     scene = models.ForeignKey('Scene', related_name='agents', null=True, blank=True)
@@ -193,6 +194,7 @@ class Scene(NamedModel):
         enemy_copy.id = None
         enemy_copy.scene = self
         enemy_copy.save()
+        return enemy_copy
 
     @property
     def complete_description(self):

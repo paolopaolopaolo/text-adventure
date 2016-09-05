@@ -52,14 +52,15 @@ class FlowRunner:
 
             while len(move_choice) < 3:
                 random_moves = Move.objects\
-                                   .filter(user=None, special_move=False)\
+                                   .filter(user=None)\
                                    .exclude(id__in=excluded_moves)\
                                    .order_by('?')[:choice_num]
                 move = self.menuify_queryset(
                     random_moves,
-                    'Move Name:\tType:\tEffect:',
+                    'Move Name:\tType:\tEffect:\tIsSpecial:',
                     'type',
-                    'effect_magnitude'
+                    'effect_magnitude',
+                    'special_move'
                 )
                 if move:
                     move_choice.append(move)
@@ -334,11 +335,61 @@ attack: {}
         if again == 'y':
             self.initiate_flow()
 
+    def random_scene(self):
+        scenes = [scene for scene in self.adventure.scenes.all()]
+        scene_choice = random.choice(scenes)
+        return scene_choice
+
+    def random_enemy(self):
+        enemy_pool = Agent.objects\
+                          .filter(type='EN',
+                                  scene=None)
+        enemies = [enem for enem in enemy_pool.all()]
+        enemy_choice = random.choice(enemies)
+        return enemy_choice
+
+    def learn_random_moveset(self, enemy):
+        move_choice = []
+        excluded_moves = []
+        while len(move_choice) < 2:
+            moves = Move.objects\
+                        .filter(user=None)\
+                        .exclude(id__in=excluded_moves)\
+                        .all()
+            move = moves.order_by('?').first()
+            move_choice.append(move)
+            excluded_moves.append(move.id)
+        for move in move_choice:
+            enemy.learn_move(move)
+
+    def add_enemies(self, num_enemies=5):
+        # Clear enemies
+        for scene in self.adventure.scenes.all():
+            scene.agents.filter(type='EN', is_boss=False).all().delete()
+        # Add random enemies to random scenes
+        for times in range(num_enemies):
+            random_enemy = self.random_enemy()
+            self.learn_random_moveset(
+                self.random_scene().add_enemy(random_enemy)
+            )
+
+    def sprinkle_inventory(self, num_inventory=5):
+        for scene in self.adventure.scenes.all():
+            scene.scene_items.all().delete()
+        for times in range(num_inventory):
+            random_inventory = Inventory.objects.filter(found_location=None, owner=None).order_by('?').first()
+            random_scene = self.adventure.scenes.order_by('?').first()
+            random_scene.add_inventory(random_inventory)
+
     def initiate_flow(self):
         try:
             self.choose_story()
             os.system('clear')
             self.create_character()
+            enemy_count = random.randrange(1, 10)
+            self.add_enemies(num_enemies=enemy_count)
+            inventory_count = random.randrange(10, 25)
+            self.sprinkle_inventory(inventory_count)
             os.system('clear')
             self.start()
         except KeyboardInterrupt:
