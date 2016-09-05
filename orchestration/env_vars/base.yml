@@ -6,5 +6,5 @@ repo_name: text-adventure
 project_name: textadventure
 application_name: textadventure
 
-git_ssh_pub_key: {{ lookup('vault', 'secret/textadventure', 'git_pub_key', 'vault_textadventure.json') }}
-git_ssh_priv_key: {{ lookup('vault', 'secret/textadventure', 'git_priv_key', 'vault_textadventure.json') }}
+git_ssh_pub_key: "{{ lookup('vault', 'secret/textadventure', 'git_pub_key', 'vault_textadventure.json') }}"
+git_ssh_priv_key: "{{ lookup('vault', 'secret/textadventure', 'git_priv_key', 'vault_textadventure.json') }}"
