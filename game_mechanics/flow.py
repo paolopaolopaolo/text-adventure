@@ -1,5 +1,6 @@
 from adventure.models import Agent, Story, Move, Inventory
 import os
+import re
 import random
 
 
@@ -197,15 +198,15 @@ attack: {}
                                             'Item:')
         if item_to_use is not None:
             if not isinstance(item_to_use, MenuItem):
-                print('='*len(item_to_use.description))
-                print(item_to_use.description)
-                print('='*len(item_to_use.description))
+                print('='*len(item_to_use.description.split('\\n')[0]))
+                print(re.sub(r'\\n', '\n', item_to_use.description))
+                print('='*len(item_to_use.description.split('\\n')[0]))
                 self.character.use_inventory(item_to_use)
             else:
                 effect, _, description = item_to_use.method()
-                print('='*len(description))
-                print(description)
-                print('='*len(description))
+                print('='*len(description.split('\\n')[0]))
+                print(re.sub(r'\\n', '\n', description))
+                print('='*len(description.split('\\n')[0]))
             self.check_inventory()
         else:
             return
@@ -246,12 +247,12 @@ attack: {}
                     if move.effect_magnitude < 0:
                         effect = current_actor.use_move(player, move)
                         print("{} uses {}!".format(current_actor.name, move.name))
-                        print(move.description)
+                        print(re.sub(r'\\n', '\n', move.description))
                         print("Your {} stat is decreases by {}!".format(move.type, effect))
                     else:
                         effect = current_actor.use_move(enemy, move)
                         print("{} uses {}!".format(current_actor.name, move.name))
-                        print(move.description)
+                        print(re.sub(r'\\n', '\n', move.description))
                         print("{}'s {} stat increases by {}!".format(enemy.name, move.type, effect))
                 else:
                     potential_moves = [move for move in player.moves.all()]
@@ -265,26 +266,26 @@ attack: {}
                         if move.effect_magnitude < 0:
                             effect = current_actor.use_move(enemy, move)
                             print("You use {}!".format(move.name))
-                            print(move.description)
+                            print(re.sub(r'\\n', '\n', move.description))
                             print("{}'s {} stat is decreases by {}!".format(enemy.name,
                                                                             move.type,
                                                                             effect))
                         else:
                             effect = current_actor.use_move(current_actor, move)
                             print("You use {}!".format(move.name))
-                            print(move.description)
+                            print(re.sub(r'\\n', '\n', move.description))
                             print("Your {} stat increases by {}!".format(move.type,
                                                                          effect))
                     if isinstance(move, Inventory):
                         effect = current_actor.use_inventory(move)
                         print("You use {}!".format(move.name))
-                        print(move.description)
+                        print(re.sub(r'\\n', 'r', move.description))
                         print("Your {} stat increases by {}!".format(move.type,
                                                                      effect))
                     if isinstance(move, MenuItem):
                         effect, type, description = move.method()
                         print("You use {}!".format(move.name))
-                        print(description)
+                        print(re.sub(r'\\n', 'r', description))
                         print("Your {} stat increases by {}!".format(type,
                                                                      effect))
 
