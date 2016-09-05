@@ -334,7 +334,7 @@ attack: {}
             self.initiate_flow()
 
     def random_scene(self):
-        scenes = [scene for scene in self.adventure.scenes.all()]
+        scenes = [scene for scene in self.adventure.scenes.exclude(id=self.adventure.first_scene.id).all()]
         scene_choice = random.choice(scenes)
         return scene_choice
 
