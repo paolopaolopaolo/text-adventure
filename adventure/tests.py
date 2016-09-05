@@ -130,14 +130,14 @@ class AdventureTestCase(TestCase):
         # Player: 10 Atk.Dmg
         # Move: -10 Dmg
         # Damage: 1.10 * -10 + 100 = 89
-        self.player.use_move(self.enemy, 0)
+        self.player.use_move(self.enemy, self.player.moves.first())
         self.assertEqual(self.enemy.hp, 89)
         self.enemy.learn_move(self.move2)
         # Player: 100 HP
         # Enemy: 100 Spc.Atk.Dmg
         # Move: -20 Dmg
         # Damage: 2.0 * -20+ 100 = 60
-        self.enemy.use_move(self.player, 0)
+        self.enemy.use_move(self.player, self.enemy.moves.first())
         self.assertEqual(self.enemy.mp, 4)
         self.assertEqual(self.player.hp, 60)
         self.player.learn_move(self.move3)
@@ -145,14 +145,14 @@ class AdventureTestCase(TestCase):
         # Player: 20 Spc.Atk.Dmg
         # Move: 10 HP
         # Action: 1.20 * 10 + 60 = 72
-        self.player.use_move(self.player, 1)
+        self.player.use_move(self.player, self.player.moves.last())
         self.assertEqual(self.player.mp, 4)
         self.assertEqual(self.player.hp, 72)
         # Player: 72 HP
         # Player: 20 Spc.Atk.Dmg
         # Move: 10 HP
         # Action: 1.20 * 10 + 72 = 84
-        self.player.use_move(self.player, 1)
+        self.player.use_move(self.player, self.player.moves.last())
         self.assertEqual(self.player.mp, 3)
         self.assertEqual(self.player.hp, 84)
 

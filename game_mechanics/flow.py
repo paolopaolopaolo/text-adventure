@@ -3,7 +3,6 @@ import os
 import random
 
 
-
 class MenuItem:
 
     def __init__(self, *args):
@@ -109,9 +108,11 @@ class FlowRunner:
         if choice is not None:
             try:
                 chosen_item = keys[choice]
+                os.system('clear')
                 return chosen_item
             except IndexError:
                 print('No option')
+        os.system('clear')
         return
 
     def navigate(self):
@@ -124,7 +125,6 @@ class FlowRunner:
         if choice is not None:
             self.character.scene = choice
             self.character.save()
-        os.system('clear')
 
     def check_thyself(self):
         print("""
@@ -145,20 +145,67 @@ attack: {}
            self.character.dict['attack_dmg'],
            ))
 
+    def use_one_of(self, items, character):
+        def item_use_method():
+            return (character.use_inventory(items[-1]),
+                    items[-1].type,
+                    items[-1].description)
+        return item_use_method
+
+    def take_one_of(self, items, character):
+        def item_take_method():
+            return (character.take_inventory(items[-1]),
+                    items[-1].type,
+                    items[-1].description)
+        return item_take_method
+
+    def compress_inventory_menu(self, inventories, character, callback_method):
+        # INPUT:Takes list of inventories
+        # OUTPUT: Returns mixed list of Menu items and inventory items
+        result = []
+        # Take item list and hash into dictionary
+        inventory_hash = {}
+        for inventory in inventories:
+            inventory_key = "{}.{}.{}".format(inventory.name,
+                                              inventory.type,
+                                              inventory.effect_magnitude)
+            if inventory_key in list(inventory_hash.keys()):
+                inventory_hash[inventory_key].append(inventory)
+            else:
+                inventory_hash[inventory_key] = [inventory]
+        # Iterate through dictionary (checking value)
+        for inv_key, inv_value in inventory_hash.items():
+            if len(inv_value) > 1:
+                # If value is greater than one, append a MenuItem
+                result.append(MenuItem(inv_key.split('.')[0]+"({})".format(len(inv_value)),
+                                       callback_method(inv_value, character)))
+            elif len(inv_value) == 1:
+                # If value is equal to one, append the inventory
+                result.append(inv_value[0])
+        return result
+
     def check_inventory(self):
-        owned_items = self.character.agent_items.all()
-        if owned_items.count() == 0:
+        owned_items = self.compress_inventory_menu(self.character.agent_items.all(),
+                                                   self.character,
+                                                   self.use_one_of)
+        if len(owned_items) == 0:
             print('++++++++++++++++++++++++')
             print('You have no items')
             print('++++++++++++++++++++++++')
             return
-        self.character.show_inventory()
         item_to_use = self.menuify_queryset(owned_items,
                                             'Item:')
         if item_to_use is not None:
-            print('='*20)
-            print(item_to_use.description)
-            self.character.use_inventory(item_to_use)
+            if not isinstance(item_to_use, MenuItem):
+                print('='*len(item_to_use.description))
+                print(item_to_use.description)
+                print('='*len(item_to_use.description))
+                self.character.use_inventory(item_to_use)
+            else:
+                effect, _, description = item_to_use.method()
+                print('='*len(description))
+                print(description)
+                print('='*len(description))
             self.check_inventory()
         else:
             return
@@ -168,22 +215,22 @@ attack: {}
             self.character.take_inventory(item)
 
     def find_items(self):
-        items = [it for it in self.character.scene.scene_items.order_by('id').all()]
+        items = self.compress_inventory_menu([it for it in self.character.scene.scene_items.order_by('id').all()],
+                                             self.character,
+                                             self.take_one_of)
         items.append(MenuItem('All', self.add_all_items))
         if self.character.scene.scene_items.count() == 0:
             print('++++++++++++++++++++++++')
             print('There are no items here.')
             print('++++++++++++++++++++++++')
             return
-        print(self.character.scene.inventory_description())
         item = self.menuify_queryset(items,
                                      'Item:')
         if item is not None:
-            if item.name == 'All':
+            if item.name == 'All' or isinstance(item, MenuItem):
                 item.method()
             else:
                 self.character.take_inventory(item)
-                os.system('clear')
 
     def fight_enemy(self, player, enemy):
         def combat_loop():
@@ -205,14 +252,15 @@ attack: {}
                         effect = current_actor.use_move(enemy, move)
                         print("{} uses {}!".format(current_actor.name, move.name))
                         print(move.description)
-                        print("{}'s {} stat increases by {}!".format(enemy.name, move.type, move.effect_magnitude))
+                        print("{}'s {} stat increases by {}!".format(enemy.name, move.type, effect))
                 else:
                     potential_moves = [move for move in player.moves.all()]
-                    potential_items = [item for item in player.agent_items.all()]
+                    potential_items = self.compress_inventory_menu([item for item in player.agent_items.all()],
+                                                                   player,
+                                                                   self.use_one_of)
                     potential_moves.extend(potential_items)
                     move = self.menuify_queryset(potential_moves,
                                                  "Move/Item:")
-                    os.system('clear')
                     if isinstance(move, Move):
                         if move.effect_magnitude < 0:
                             effect = current_actor.use_move(enemy, move)
@@ -233,7 +281,14 @@ attack: {}
                         print(move.description)
                         print("Your {} stat increases by {}!".format(move.type,
                                                                      effect))
+                    if isinstance(move, MenuItem):
+                        effect, type, description = move.method()
+                        print("You use {}!".format(move.name))
+                        print(description)
+                        print("Your {} stat increases by {}!".format(type,
+                                                                     effect))
 
+                print('Your HP: {}\nEnemy HP: {}'.format(player.hp, enemy.hp))
                 # Toggle current actor
                 if current_actor_idx:
                     current_actor_idx = 0
@@ -270,7 +325,6 @@ attack: {}
                 'Actions:'
             )
             if choice:
-                os.system('clear')
                 choice.method()
         self.character.delete()
         print('GAME OVER')
