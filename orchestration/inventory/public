@@ -2,7 +2,7 @@
 env=public
 
 [appservers]
-vault.dpmercado.com
+138.68.59.106
 
 [dbservers]
-104.236.223.4
+138.68.59.106

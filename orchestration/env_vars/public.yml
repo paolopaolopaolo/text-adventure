@@ -37,7 +37,7 @@ ssl_key_password: password
 ssl_enabled: no
 
 # Application settings.
-private_application_hosts: ['vault.dpmercado.com', ]
+private_application_hosts: ['138.68.59.106', ]
 
 # Application settings.
 django_settings_file: "config.settings.pub"
