@@ -29,12 +29,12 @@ class FlowRunner:
         move_choice = []
         excluded_moves = []
         name = input('What is your character\'s name?: ')
-        if Agent.objects.filter(name=name).count() > 0:
+        if Agent.objects.filter(type='PLR', name=name).count() > 0:
             continue_game = input('Continue Game (y/n)?: ').lower()
             if continue_game == 'y':
                 print('Confirm which character you\'re loading.')
                 self.character = self.menuify_queryset(
-                    Agent.objects.filter(name=name).all(),
+                    Agent.objects.filter(type='PLR', name=name).all(),
                     'Agent:\tDescription:',
                     'description'
                 )
