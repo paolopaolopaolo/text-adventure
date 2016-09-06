@@ -188,6 +188,8 @@ attack: {}
         owned_items = self.compress_inventory_menu(self.character.agent_items.all(),
                                                    self.character,
                                                    self.use_one_of)
+        if self.character.agent_items.filter(inventory_type='CNS').all().count() > 0:
+            owned_items.append(MenuItem('Use all items', self.use_all_items))
         if len(owned_items) == 0:
             print('++++++++++++++++++++++++')
             print('You have no items')
@@ -202,10 +204,14 @@ attack: {}
                 print('='*len(item_to_use.description.split('\\n')[0]))
                 self.character.use_inventory(item_to_use)
             else:
-                effect, _, description = item_to_use.method()
-                print('='*len(description.split('\\n')[0]))
-                print(re.sub(r'\\n', '\n', description))
-                print('='*len(description.split('\\n')[0]))
+                if item_to_use.name == 'Use all items':
+                    import pdb; pdb.set_trace()
+                    item_to_use.method()
+                else:
+                    effect, _, description = item_to_use.method()
+                    print('='*len(description.split('\\n')[0]))
+                    print(re.sub(r'\\n', '\n', description))
+                    print('='*len(description.split('\\n')[0]))
             self.check_inventory()
         else:
             return
@@ -213,6 +219,12 @@ attack: {}
     def add_all_items(self):
         for item in self.character.scene.scene_items.all():
             self.character.take_inventory(item)
+
+    def use_all_items(self):
+        users_items = self.character.agent_items.filter(inventory_type='CNS').all()
+        for item in users_items:
+            self.character.use_inventory(item)
+        users_items.delete()
 
     def find_items(self):
         items = self.compress_inventory_menu([it for it in self.character.scene.scene_items.order_by('id').all()],
@@ -231,12 +243,16 @@ attack: {}
                 item.method()
             else:
                 self.character.take_inventory(item)
+            self.find_items()
+        else:
+            return
 
     def fight_enemy(self, player, enemy):
         def combat_loop():
             actors = [enemy, player]
             random.shuffle(actors)
             current_actor_idx = 0
+            move_lock = False
             print("You engage {} in a combat sequence TO THE DEATH".format(enemy.name))
             while player.hp > 0 and enemy.hp > 0:
                 # Current actor uses move
@@ -285,15 +301,17 @@ attack: {}
                         effect, type, description = move.method()
                         print("You use {}!".format(move.name))
                         print(re.sub(r'\\n', '\n', description))
-                        print("Your {} stat increases by {}!".format(type,
-                                                                     effect))
+                        print("Your {} stat increases by {}!".format(type, effect))
 
-                print('Your HP: {}\nEnemy HP: {}'.format(player.hp, enemy.hp))
-                # Toggle current actor
-                if current_actor_idx:
-                    current_actor_idx = 0
-                else:
-                    current_actor_idx = 1
+                    move_lock = move is None
+
+                if not move_lock:
+                    print('Your HP: {}\nEnemy HP: {}'.format(player.hp, enemy.hp))
+                    # Toggle current actor
+                    if current_actor_idx:
+                        current_actor_idx = 0
+                    else:
+                        current_actor_idx = 1
             if player.hp <= 0:
                 print("You lost!")
             if enemy.hp <=0:
@@ -306,7 +324,7 @@ attack: {}
             menu_items = [
                 MenuItem('Navigate', self.navigate),
                 MenuItem('Check stats', self.check_thyself),
-                MenuItem('Check Inventory', self.check_inventory),
+                MenuItem('Use Inventory', self.check_inventory),
                 MenuItem('Look for items', self.find_items),
             ]
             enemies = self.character.scene.agents.filter(type='EN', hp__gt=0)
