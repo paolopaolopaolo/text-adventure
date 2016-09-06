@@ -2,7 +2,7 @@
 env=public
 
 [appservers]
-138.68.59.106
+game.dpmercado.com
 
 [dbservers]
 138.68.59.106
