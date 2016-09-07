@@ -133,10 +133,20 @@ class Inventory(StatChanger):
 class Scene(NamedModel):
     to_scenes = models.ManyToManyField("self", related_name='from_scenes', symmetrical=False, blank=True)
     story = models.ForeignKey('Story', related_name='scenes', null=True, blank=True)
+    is_locked = models.BooleanField(default=False)
+    unlocking_item = models.ForeignKey(Inventory, related_name='unlocking_scenes', null=True, blank=True)
+
+    def unlock_scene(self, item):
+        for scene in self.to_scenes.filter(is_locked=True).all():
+            if item.name == scene.unlocking_item.name:
+                self.is_locked = False,
+                self.save()
+                print(item.description)
+                item.delete()
 
     def _render_scene_attribute(self, attributes, prefix_dict, identifier_strings, starting_string):
         for attribute in attributes:
-            queryset = getattr(self, attribute).all()
+            queryset = getattr(self, attribute).filter(is_locked=False).all()
             for idx, item in enumerate(queryset.all()):
                 if idx == 0:
                     prefix = prefix_dict.get(attribute)[0]
