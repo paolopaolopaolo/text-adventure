@@ -161,11 +161,8 @@ class Scene(NamedModel):
             for agent in other_agents:
                 message = "\n".join((
                     message,
-                    "%" * len(agent.name),
-                    agent.name,
-                    "-" * len(agent.name),
-                    agent.description,
-                    ''
+                    "* {}\n  {}".format(agent.name, agent.description),
+                    ""
                 ))
             return message
         return
@@ -188,12 +185,10 @@ class Scene(NamedModel):
             item_obj = self.scene_items.filter(name=item_name).first()
             item_description = "\n".join((
                 item_description,
-                "%" * (len(item_obj.name) + 5),
-                "{} ({})".format(item_obj.name, item_number),
-                "-" * (len(item_obj.name) + 5),
-                'Affects: {}'.format(item_obj.type),
-                'By: {}'.format(item_obj.effect_magnitude),
-                ''
+                "* {} ({})\n  Affects: {}\tBy: {} points\n".format(item_obj.name,
+                                                                   item_number,
+                                                                   item_obj.type,
+                                                                   item_obj.effect_magnitude),
             ))
         if self.scene_items.count() > 0:
             return item_description
