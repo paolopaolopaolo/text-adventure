@@ -170,24 +170,34 @@ class Scene(NamedModel):
             return message
         return
 
+    @property
     def inventory_description(self):
         item_description = "\n".join((
             "=" * 24,
-            "You find something here.",
+            "There are items here.",
             "=" * 24,
             ""
         ))
+        item_hash = {}
         for item in self.scene_items.all():
+            if item.name in list(item_hash.keys()):
+                item_hash[item.name] += 1
+            else:
+                item_hash[item.name] = 1
+        for item_name, item_number in item_hash.items():
+            item_obj = self.scene_items.filter(name=item_name).first()
             item_description = "\n".join((
                 item_description,
-                "%" * len(item.name),
-                item.name,
-                "-" * len(item.name),
-                'Affects: {}'.format(item.type),
-                'By: {}'.format(item.effect_magnitude),
+                "%" * (len(item_obj.name) + 5),
+                "{} ({})".format(item_obj.name, item_number),
+                "-" * (len(item_obj.name) + 5),
+                'Affects: {}'.format(item_obj.type),
+                'By: {}'.format(item_obj.effect_magnitude),
                 ''
             ))
-        return item_description
+        if self.scene_items.count() > 0:
+            return item_description
+        return ""
 
     def add_enemy(self, enemy):
         enemy_copy = enemy

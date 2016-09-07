@@ -176,8 +176,15 @@ attack: {}
         # Iterate through dictionary (checking value)
         for inv_key, inv_value in inventory_hash.items():
             if len(inv_value) > 1:
+                if callback_method == self.take_one_of:
+                    menu_item_name = "Take {} ({})"
+                elif callback_method == self.use_one_of:
+                    menu_item_name = "Use {} ({})"
+                else:
+                    menu_item_name = "{} ({})"
                 # If value is greater than one, append a MenuItem
-                result.append(MenuItem(inv_key.split('.')[0]+"({})".format(len(inv_value)),
+                result.append(MenuItem(menu_item_name.format(inv_key.split('.')[0],
+                                                             len(inv_value)),
                                        callback_method(inv_value, character)))
             elif len(inv_value) == 1:
                 # If value is equal to one, append the inventory
@@ -188,6 +195,9 @@ attack: {}
         owned_items = self.compress_inventory_menu(self.character.agent_items.all(),
                                                    self.character,
                                                    self.use_one_of)
+        owned_items = [MenuItem('Use {}'.format(item.name), self.use_item(item))
+                       if isinstance(item, Inventory)
+                       else item for item in owned_items]
         if self.character.agent_items.filter(inventory_type='CNS').all().count() > 0:
             owned_items.append(MenuItem('Use all items', self.use_all_items))
         if len(owned_items) == 0:
@@ -198,20 +208,7 @@ attack: {}
         item_to_use = self.menuify_queryset(owned_items,
                                             'Item:')
         if item_to_use is not None:
-            if not isinstance(item_to_use, MenuItem):
-                print('='*len(item_to_use.description.split('\\n')[0]))
-                print(re.sub(r'\\n', '\n', item_to_use.description))
-                print('='*len(item_to_use.description.split('\\n')[0]))
-                self.character.use_inventory(item_to_use)
-            else:
-                if item_to_use.name == 'Use all items':
-                    import pdb; pdb.set_trace()
-                    item_to_use.method()
-                else:
-                    effect, _, description = item_to_use.method()
-                    print('='*len(description.split('\\n')[0]))
-                    print(re.sub(r'\\n', '\n', description))
-                    print('='*len(description.split('\\n')[0]))
+            item_to_use.method()
             self.check_inventory()
         else:
             return
@@ -226,26 +223,28 @@ attack: {}
             self.character.use_inventory(item)
         users_items.delete()
 
+    def take_item(self, item):
+        def wrapper():
+            self.character.take_inventory(item)
+        return wrapper
+
+    def use_item(self, item):
+        def wrapper():
+            print('=' * len(item.description.split('\\n')[0]))
+            print(re.sub(r'\\n', '\n', item.description))
+            print('=' * len(item.description.split('\\n')[0]))
+            self.character.use_inventory(item)
+        return wrapper
+
     def find_items(self):
         items = self.compress_inventory_menu([it for it in self.character.scene.scene_items.order_by('id').all()],
                                              self.character,
                                              self.take_one_of)
-        items.append(MenuItem('All', self.add_all_items))
-        if self.character.scene.scene_items.count() == 0:
-            print('++++++++++++++++++++++++')
-            print('There are no items here.')
-            print('++++++++++++++++++++++++')
-            return
-        item = self.menuify_queryset(items,
-                                     'Item:')
-        if item is not None:
-            if item.name == 'All' or isinstance(item, MenuItem):
-                item.method()
-            else:
-                self.character.take_inventory(item)
-            self.find_items()
-        else:
-            return
+        if len(items) > 0:
+            items.append(MenuItem('Take All Items', self.add_all_items))
+        items = [MenuItem('Take {}'.format(item.name), self.take_item(item))
+                 if isinstance(item, Inventory) else item for item in items]
+        return items
 
     def fight_enemy(self, player, enemy):
         def combat_loop():
@@ -325,15 +324,15 @@ attack: {}
                 MenuItem('Navigate', self.navigate),
                 MenuItem('Check stats', self.check_thyself),
                 MenuItem('Use Inventory', self.check_inventory),
-                MenuItem('Look for items', self.find_items),
             ]
             enemies = self.character.scene.agents.filter(type='EN', hp__gt=0)
             if enemies.count() > 0:
                 menu_items.pop(0)
                 for enemy in enemies:
                     menu_items.append(MenuItem('Fight {}'.format(enemy.name), self.fight_enemy(self.character, enemy)))
-
+            menu_items.extend(self.find_items())
             print(self.character.scene.complete_description)
+            print(self.character.scene.inventory_description)
             print('')
             agent_description = self.character.scene.agent_description(self.character)
             if agent_description:
