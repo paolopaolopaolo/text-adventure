@@ -9,7 +9,7 @@ class Command(BaseCommand):
     def generate_random_scene(self, story):
         return story.scenes.order_by('?').first()
 
-    def generate_random_item(self):
+    def generate_random_consumer_item(self):
         return Inventory.objects\
                         .filter(owner=None, found_location=None, inventory_type='CNS')\
                         .order_by('?')\
@@ -29,5 +29,5 @@ class Command(BaseCommand):
         story = self.choose_story()
         for idx in range(0, items):
             self.generate_random_scene(story)\
-                .add_inventory(self.generate_random_item())
-        print("Seeded {} items in Story:{}!".format(items, story.name))
+                .add_inventory(self.generate_random_consumer_item())
+        print("Seeded {} items in {}!".format(items, story.name))
