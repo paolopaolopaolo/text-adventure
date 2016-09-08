@@ -63,6 +63,31 @@ class Agent(NamedModel):
     mp = models.IntegerField()
     scene = models.ForeignKey('Scene', related_name='agents', null=True, blank=True)
 
+    def start_over_choice(self, restart_method):
+        start_over = input('Start over (y/n)?: ')
+        if start_over.lower() == 'y':
+            self.hp = 100
+            self.mp = 10
+            self.scene = None
+            self.save()
+            restart_method()
+        elif start_over.lower() == 'n':
+            self.delete()
+        else:
+            print('Bad input, try again!')
+            self.start_over_choice()
+
+    def dies(self, method=None):
+        # Drops items onto scene
+        for item in self.agent_items.all():
+            item.found_location = self.scene
+            item.owner = None
+            item.save()
+        if self.type == 'EN':
+            self.delete()
+        else:
+            self.start_over_choice(method)
+
     def knows_move(self, move):
         move = move.dict
         current_moves = [current_move.dict for current_move in self.moves.all()]
@@ -100,8 +125,12 @@ class Agent(NamedModel):
         inventory.save()
 
     def use_inventory(self, item):
-        effect = apply_item(self, item)
-        item.delete()
+        effect = None
+        if item.inventory_type == 'CNS':
+            effect = apply_item(self, item)
+            item.delete()
+        else:
+            self.scene.unlock_scene(item)
         return effect
 
 
@@ -139,8 +168,8 @@ class Scene(NamedModel):
     def unlock_scene(self, item):
         for scene in self.to_scenes.filter(is_locked=True).all():
             if item.name == scene.unlocking_item.name:
-                self.is_locked = False,
-                self.save()
+                scene.is_locked = False
+                scene.save()
                 print(item.description)
                 item.delete()
 

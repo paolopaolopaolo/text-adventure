@@ -25,19 +25,34 @@ class FlowRunner:
         else:
             self.choose_story()
 
+    @classmethod
+    def y_or_n_question(cls, prompt):
+        answer = input('{} (y/n)?:'.format(prompt)).lower()
+        if answer == 'y':
+            return True
+        elif answer == 'n':
+            return False
+        else:
+            return cls.y_or_n_question(prompt)
+
     def create_character(self):
         move_choice = []
         excluded_moves = []
+        existing = self.y_or_n_question('Existing game?')
         name = input('What is your character\'s name?: ')
-        if Agent.objects.filter(type='PLR', name=name).count() > 0:
-            continue_game = input('Continue Game (y/n)?: ').lower()
-            if continue_game == 'y':
-                print('Confirm which character you\'re loading.')
-                self.character = self.menuify_queryset(
-                    Agent.objects.filter(type='PLR', name=name).all(),
-                    'Agent:\tDescription:',
-                    'description'
-                )
+        if existing:
+            if Agent.objects.filter(type='PLR', name=name).count() > 0:
+                continue_game = input('Continue Game (y/n)?: ').lower()
+                if continue_game == 'y':
+                    print('Confirm which character you\'re loading.')
+                    self.character = self.menuify_queryset(
+                        Agent.objects.filter(type='PLR', name=name).all(),
+                        'Agent:\tDescription:',
+                        'description'
+                    )
+            else:
+                print('Could not find character!')
+                self.create_character()
         else:
             description = input('Tell us about this character: ')
             character = Agent(type='PLR',
@@ -48,24 +63,7 @@ class FlowRunner:
                               attack_dmg=0,
                               spc_attack_dmg=0)
             character.save()
-
-            while len(move_choice) < 3:
-                random_moves = Move.objects\
-                                   .filter(user=None)\
-                                   .exclude(id__in=excluded_moves)\
-                                   .all()
-                move = self.menuify_queryset(
-                    random_moves,
-                    'Move Name:\tType:\tEffect:\tIsSpecial:',
-                    'type',
-                    'effect_magnitude',
-                    'special_move'
-                )
-                if move:
-                    move_choice.append(move)
-                    excluded_moves.append(move.id)
-            for move in move_choice:
-                character.learn_move(move)
+            self.learn_random_moveset(character, 4, use_input=True)
             self.character = character
 
     @classmethod
@@ -116,8 +114,8 @@ class FlowRunner:
         return
 
     def navigate(self):
-        all_scenes = [scene for scene in self.character.scene.to_scenes.all()]
-        all_scenes.extend([scene for scene in self.character.scene.from_scenes.all()])
+        all_scenes = [scene for scene in self.character.scene.to_scenes.filter(is_locked=False).all()]
+        all_scenes.extend([scene for scene in self.character.scene.from_scenes.filter(is_locked=False).all()])
         choice = self.menuify_queryset(
             all_scenes,
             'Path to:'
@@ -343,12 +341,8 @@ attack: {}
             )
             if choice:
                 choice.method()
-        self.character.delete()
         print('GAME OVER')
-        print('Play again(y/n)?')
-        again = input('').lower()
-        if again == 'y':
-            self.initiate_flow()
+        self.character.dies(self.start)
 
     def random_scene(self):
         scenes = [scene for scene in self.adventure.scenes.exclude(id=self.adventure.first_scene.id).all()]
@@ -364,19 +358,29 @@ attack: {}
         enemy_choice = random.choice(enemies)
         return enemy_choice
 
-    def learn_random_moveset(self, enemy):
+    def learn_random_moveset(self, character, move_count, use_input=False):
         move_choice = []
         excluded_moves = []
-        while len(move_choice) < 2:
+        while len(move_choice) < move_count:
             moves = Move.objects\
                         .filter(user=None)\
                         .exclude(id__in=excluded_moves)\
                         .all()
-            move = moves.order_by('?').first()
-            move_choice.append(move)
-            excluded_moves.append(move.id)
+            if use_input:
+                move = self.menuify_queryset(moves,
+                                             'Move:\t\tType:\tEffect:\tUses MP:',
+                                             'type',
+                                             'effect_magnitude',
+                                             'special_move')
+            else:
+                move = moves.order_by('?').first()
+            if move is not None:
+                move_choice.append(move)
+                excluded_moves.append(move.id)
+            else:
+                print('Bad choice!')
         for move in move_choice:
-            enemy.learn_move(move)
+            character.learn_move(move)
 
     def add_enemies(self, num_enemies=5):
         # Clear enemies
@@ -386,7 +390,8 @@ attack: {}
         for times in range(num_enemies):
             random_enemy = self.random_enemy()
             self.learn_random_moveset(
-                self.random_scene().add_enemy(random_enemy)
+                self.random_scene().add_enemy(random_enemy),
+                2
             )
 
     def sprinkle_inventory(self, num_inventory=5):
