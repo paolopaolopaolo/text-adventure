@@ -63,7 +63,7 @@ class Agent(NamedModel):
     mp = models.IntegerField()
     scene = models.ForeignKey('Scene', related_name='agents', null=True, blank=True)
 
-    def start_over_choice(self, restart_method):
+    def start_over_choice(self, restart_method, end_method):
         start_over = input('Start over (y/n)?: ')
         if start_over.lower() == 'y':
             self.hp = 100
@@ -73,9 +73,10 @@ class Agent(NamedModel):
             restart_method()
         elif start_over.lower() == 'n':
             self.delete()
+            end_method()
         else:
             print('Bad input, try again!')
-            self.start_over_choice()
+            self.start_over_choice(restart_method, end_method)
 
     def dies(self, method=None):
         # Drops items onto scene

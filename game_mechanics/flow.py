@@ -342,7 +342,7 @@ attack: {}
             if choice:
                 choice.method()
         print('GAME OVER')
-        self.character.dies(self.start)
+        self.character.dies(self.start, self.initiate_flow)
 
     def random_scene(self):
         scenes = [scene for scene in self.adventure.scenes.exclude(id=self.adventure.first_scene.id).all()]
