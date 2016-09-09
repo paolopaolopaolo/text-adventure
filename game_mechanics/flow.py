@@ -396,9 +396,11 @@ attack: {}
 
     def sprinkle_inventory(self, num_inventory=5):
         for scene in self.adventure.scenes.all():
-            scene.scene_items.filter(type='CNS').all().delete()
+            scene.scene_items.filter(inventory_type='CNS').all().delete()
         for times in range(num_inventory):
-            random_inventory = Inventory.objects.filter(found_location=None, owner=None, type='CNS').order_by('?').first()
+            random_inventory = Inventory.objects.filter(found_location=None,
+                                                        owner=None,
+                                                        inventory_type='CNS').order_by('?').first()
             random_scene = self.adventure.scenes.order_by('?').first()
             random_scene.add_inventory(random_inventory)
 
