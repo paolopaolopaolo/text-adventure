@@ -18,7 +18,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         story = self.choose_story()
         # Remove all enemies and players currently in a scene in a story
-        Agent.objects.filter(scene__story=story).delete()
+        Agent.objects\
+             .filter(scene__story=story)\
+             .delete()
         # Remove all items from the story
         Inventory.objects.filter(found_location__story=story).delete()
         # Get all locked scenes and unlock them

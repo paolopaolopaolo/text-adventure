@@ -156,15 +156,18 @@ class Inventory(StatChanger):
         'inventory_type',
         'effect_magnitude',
     ]
-    found_location = models.ForeignKey("Scene", related_name='scene_items', null=True, blank=True)
-    owner = models.ForeignKey("Agent", related_name='agent_items', null=True, blank=True)
+    found_location = models.ForeignKey("Scene", related_name='scene_items',
+                                       null=True, blank=True, on_delete=models.SET_NULL)
+    owner = models.ForeignKey("Agent", related_name='agent_items', null=True,
+                              blank=True, on_delete=models.SET_NULL)
 
 
 class Scene(NamedModel):
     to_scenes = models.ManyToManyField("self", related_name='from_scenes', symmetrical=False, blank=True)
     story = models.ForeignKey('Story', related_name='scenes', null=True, blank=True)
     is_locked = models.BooleanField(default=False)
-    unlocking_item = models.ForeignKey(Inventory, related_name='unlocking_scenes', null=True, blank=True)
+    unlocking_item = models.ForeignKey(Inventory, related_name='unlocking_scenes',
+                                       null=True, blank=True, on_delete=models.SET_NULL)
 
     def unlock_scene(self, item):
         for scene in self.to_scenes.filter(is_locked=True).all():
