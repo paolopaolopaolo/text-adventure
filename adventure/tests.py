@@ -214,20 +214,14 @@ class AdventureTestCase(TestCase):
     def test_inventory_description(self):
         self.scene1.add_inventory(self.inventory1)
         self.scene1.add_inventory(self.inventory2)
-        self.assertEqual(self.scene1.inventory_description(),
+        self.assertEqual(self.scene1.inventory_description,
                          """========================
-You find something here.
+There are items here.
 ========================
 
-%%%%%%%%%%%%%%%%%%%%
-A small peanut candy
---------------------
-Affects: HP
-By: 2
+* A small peanut candy (1)
+  Affects: HP\tBy: 2 points
 
-%%%%%%
-A rock
-------
-Affects: SAD
-By: 10
+* A rock (1)
+  Affects: SAD\tBy: 10 points
 """)
