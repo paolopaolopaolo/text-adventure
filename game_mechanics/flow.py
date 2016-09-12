@@ -416,8 +416,8 @@ attack: {}
             self.create_character()
             reset_game = input('Reset enemies and inventory? (y/n): ').lower()
             if reset_game == 'y':
-                lowrange = self.adventure.scenes.count()
-                highrange = self.adventure.scenes.count()
+                lowrange = self.adventure.scenes.count() - 2
+                highrange = self.adventure.scenes.count() + 2
                 density = 1
                 enemy_count = random.randrange(int(density*lowrange), int(density*highrange))
                 self.add_enemies(num_enemies=enemy_count)
