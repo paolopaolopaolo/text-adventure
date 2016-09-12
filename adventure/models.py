@@ -78,7 +78,7 @@ class Agent(NamedModel):
             print('Bad input, try again!')
             self.start_over_choice(restart_method, end_method)
 
-    def dies(self, method=None):
+    def dies(self, restart_method=None, end_method=None):
         # Drops items onto scene
         for item in self.agent_items.all():
             item.found_location = self.scene
@@ -87,7 +87,7 @@ class Agent(NamedModel):
         if self.type == 'EN':
             self.delete()
         else:
-            self.start_over_choice(method)
+            self.start_over_choice(restart_method, end_method)
 
     def knows_move(self, move):
         move = move.dict
