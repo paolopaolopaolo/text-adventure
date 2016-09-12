@@ -2,6 +2,7 @@ from adventure.models import Agent, Story, Move, Inventory
 import os
 import re
 import random
+from asciify.word_renderer import WordRenderer
 
 
 class MenuItem:
@@ -406,6 +407,10 @@ attack: {}
 
     def initiate_flow(self):
         try:
+            word_printer = WordRenderer()
+            os.system('clear')
+            print(word_printer.create_rendered_word('TEXT', 'XX', '  '))
+            print(word_printer.create_rendered_word('ADVENTURE', 'OO', '  '))
             self.choose_story()
             os.system('clear')
             self.create_character()

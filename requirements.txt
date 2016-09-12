@@ -1,3 +1,5 @@
+asciify==0.0.5
+click==6.6
 defusedxml==0.4.1
 Django==1.10
 django-appconf==1.0.2
